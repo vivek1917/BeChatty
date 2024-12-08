@@ -1,38 +1,3 @@
-// import express from "express";
-// import { createServer } from 'node:http';
-// import { fileURLToPath } from "node:url";
-// import { dirname, join } from "node:path";
-// import { Server } from "socket.io";
-
-// const app = express();
-// const server = createServer(app);
-// const io = new Server(server);
-
-// const __dirname = dirname(fileURLToPath(import.meta.url));
-
-// app.get('/', (req, res) => {
-//     res.sendFile(path.join(__dirname, 'index.html'));
-// });
-
-// io.on('connection', (socket) => {
-//     console.log('a user connected');
-
-//     socket.on('chat message', (msg) => {
-//         io.emit('chat message', msg);
-//         //console.log('message: ' + msg);
-//     });
-
-//     socket.on('disconnect', () => {
-//         console.log('user disconnected');
-//     });
-// });
-
-// server.listen(3000, () => {
-//     console.log('server running at http://localhost:3000');
-// });
-
-//2nd code:
-
 import express from "express";
 import { createServer } from 'node:http';
 import { fileURLToPath } from "node:url";
@@ -52,36 +17,34 @@ app.get('/', (req, res) => {
 // Handle socket connections
 io.on('connection', (socket) => {
     console.log('A user connected');
-
-    // Store the room code in the socket object
     let currentRoom = null;
 
-    // Join a room
-    socket.on('join room', (roomCode) => {
+    socket.on('join room', ({ username, roomCode }) => {
         socket.join(roomCode);
         currentRoom = roomCode;
-        console.log(`User joined room: ${roomCode}`);
-        socket.emit('chat message', `You have joined room: ${roomCode}`);
+        console.log(`${username} joined room: ${roomCode}`);
+        socket.emit('chat message', { username: 'System', message: `Welcome, ${username}!` });
+        socket.to(roomCode).emit('chat message', { username: 'System', message: `${username} has joined the room.` });
     });
 
-    // Create a room
-    socket.on('create room', (roomCode) => {
+    socket.on('create room', ({ username, roomCode }) => {
         socket.join(roomCode);
         currentRoom = roomCode;
-        console.log(`Room created: ${roomCode}`);
-        socket.emit('chat message', `Room created: ${roomCode}`);
+        console.log(`${username} created room: ${roomCode}`);
+        socket.emit('chat message', { username: 'System', message: `Room created. Welcome, ${username}!` });
     });
 
-    // Handle chat message
-    socket.on('chat message', (msg) => {
+    socket.on('chat message', ({ username, message }) => {
         if (currentRoom) {
-            io.to(currentRoom).emit('chat message', msg); // Emit to the specific room
+            io.to(currentRoom).emit('chat message', { username, message });
         }
     });
 
-    // Handle disconnection
     socket.on('disconnect', () => {
         console.log('User disconnected');
+        if (currentRoom) {
+            socket.to(currentRoom).emit('chat message', { username: 'System', message: 'A user has left the room.' });
+        }
     });
 });
 

@@ -6,14 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BeChatty</title>
     <style>
-        /* Your existing styles */
         body {
             margin: 0;
             padding-bottom: 3rem;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
 
-        /* Chat styles */
         #form {
             background: rgba(0, 0, 0, 0.15);
             padding: 0.25rem;
@@ -63,11 +61,22 @@
             background: #efefef;
         }
 
-        /* Room creation/joining styles */
-        #room-form {
+        #user-form {
             display: flex;
             justify-content: center;
             margin-top: 2rem;
+        }
+
+        #username-input {
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #333;
+        }
+
+        #room-form {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
         }
 
         #room-input {
@@ -76,50 +85,50 @@
             border: 1px solid #333;
         }
 
-        #join-button {
-            padding: 0.5rem 1rem;
-            margin-left: 0.5rem;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-        }
-
+        #join-button,
         #create-button {
             padding: 0.5rem 1rem;
             margin-left: 0.5rem;
-            background-color: #007bff;
-            color: white;
             border: none;
             border-radius: 0.5rem;
+            color: white;
+        }
+
+        #join-button {
+            background-color: #28a745;
+        }
+
+        #create-button {
+            background-color: #007bff;
         }
 
         #chat-container {
-            display: none; /* Hide chat initially */
+            display: none;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <div id="room-form">
-            <input id="room-input" placeholder="Enter room code or create new" />
-            <button id="join-button">Join Room</button>
-            <button id="create-button">Create Room</button>
-        </div>
-
-        <div id="chat-container">
-            <ul id="messages"></ul>
-            <form id="form" action="">
-                <input id="input" autocomplete="off" />
-                <button>Send</button>
-            </form>
-        </div>
+    <div id="user-form">
+        <input id="username-input" placeholder="Enter your username" />
+    </div>
+    <div id="room-form">
+        <input id="room-input" placeholder="Enter room code or create new" />
+        <button id="join-button">Join Room</button>
+        <button id="create-button">Create Room</button>
+    </div>
+    <div id="chat-container">
+        <ul id="messages"></ul>
+        <form id="form" action="">
+            <input id="input" autocomplete="off" />
+            <button>Send</button>
+        </form>
     </div>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
         const socket = io();
 
+        const usernameInput = document.getElementById('username-input');
         const roomInput = document.getElementById('room-input');
         const joinButton = document.getElementById('join-button');
         const createButton = document.getElementById('create-button');
@@ -129,31 +138,45 @@
         const messages = document.getElementById('messages');
 
         joinButton.addEventListener('click', () => {
-            const roomCode = roomInput.value;
-            if (roomCode) {
-                socket.emit('join room', roomCode);
-                chatContainer.style.display = 'block'; // Show chat container
+            const username = usernameInput.value.trim();
+            const roomCode = roomInput.value.trim();
+
+            if (username && roomCode) {
+                socket.emit('join room', { username, roomCode });
+                chatContainer.style.display = 'block';
+            } else {
+                alert('Please enter a username and room code.');
             }
         });
 
         createButton.addEventListener('click', () => {
-            const roomCode = Math.floor(10000 + Math.random() * 90000).toString(); // Generate a random 5-digit code
-            socket.emit('create room', roomCode);
-            roomInput.value = roomCode; // Display the room code to the user
-            chatContainer.style.display = 'block'; // Show chat container
+            const username = usernameInput.value.trim();
+
+            if (username) {
+                const roomCode = Math.floor(10000 + Math.random() * 90000).toString();
+                socket.emit('create room', { username, roomCode });
+                roomInput.value = roomCode;
+                chatContainer.style.display = 'block';
+            } else {
+                alert('Please enter a username.');
+            }
         });
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            if (input.value) {
-                socket.emit('chat message', input.value);
+            const message = input.value.trim();
+            const username = usernameInput.value.trim();
+
+            if (message && username) {
+                socket.emit('chat message', { username, message });
                 input.value = '';
             }
         });
 
-        socket.on('chat message', (msg) => {
+        socket.on('chat message', (data) => {
+            const { username, message } = data;
             const item = document.createElement('li');
-            item.textContent = msg;
+            item.textContent = `${username}: ${message}`;
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
         });
