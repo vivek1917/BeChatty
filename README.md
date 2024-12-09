@@ -1,6 +1,11 @@
-# BeChatty
+# **BeChatty**
 
 **BeChatty** is a real-time chat application built using **Node.js** and **Socket.IO**. Designed with simplicity and ease of use in mind, BeChatty allows users to join a room and exchange messages with others in real-time. It's a great foundation for learning **Socket.IO** and creating real-time web applications.
+
+---
+
+## 🌐 Live Demo
+Explore BeChatty live at [**bechatty.onrender.com**](https://bechatty.onrender.com).
 
 ---
 
@@ -22,3 +27,5 @@
 
 ## 🏆 Acknowledgments
 This project was built with **Node.js**, **Socket.IO**, and the **help of learning resources and community tools**.
+
+---
